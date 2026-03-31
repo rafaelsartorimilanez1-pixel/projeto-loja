@@ -1,6 +1,8 @@
-import React, {useRef} from 'react';
+import React, {useEffect, useRef} from 'react';
 import InputArea from './InputsArea';
 import styled from 'styled-components';
+import { toast } from 'react-toastify';
+import axios from 'axios'
 
 const FormContainer = styled.form`
     display:flex;
@@ -22,21 +24,75 @@ const Button = styled.button`
     height: 42px;
 `
 
-const Form = ({ onEdit }) => {
-
+const Form = ({ onEdit, setOnEdit, getProducts }) => {
     const ref = useRef();
 
+    
+    useEffect ( () => {
+        
+        if(onEdit){
+    
+            const product = ref.current
+    
+            product.nome.value = onEdit.nome;
+            product.preco.value = onEdit.preco;
+            product.estoque.value = onEdit.estoque;
+            product.fone.value = onEdit.fone;
+        }
+    }, [onEdit] );
+
+    const handlerSubmit = async (event) => {
+
+        event.preventDefault()
+
+        const product = ref.current
+
+        if(!product.nome.value || !product.preco.value || !product.estoque.value || !product.fone.value){
+            return toast.warn('Preencha todos os campos')
+        }
+ 
+        if(onEdit) {
+            await axios.put(`http://localhost:4000/${onEdit.idprodutos}`, {
+                nome: product.nome.value,
+                preco: product.preco.value,
+                estoque: product.estoque.value,
+                fone: product.fone.value
+            })
+            .then( ( { data} ) => toast.success(data) )
+            .catch((err) => toast.error(err.response?.data || "Erro"))
+        }else{
+            await axios.post('http://localhost:4000', {
+                nome: product.nome.value,
+                preco: product.preco.value,
+                estoque: product.estoque.value,
+                fone: product.fone.value
+            })
+            .then( ( { data} ) => toast.success(data) )
+            .catch((err) => toast.error(err.response?.data || "Erro"))
+        }
+
+        product.nome.value = '';
+        product.preco.value = '';
+        product.estoque.value = '';
+        product.fone.value = '';
+
+        setOnEdit(null);
+
+        getProducts();
+    }
+
+
     return(
-     <FormContainer>
+     <FormContainer ref={ref} onSubmit={handlerSubmit}>
         <InputArea 
         label='Nome'
         type='text'
-        name='name'
+        name='nome'
          />
                  <InputArea 
         label='Preço'
         type='text'
-        name='Preço'
+        name='preco'
          />
                  <InputArea 
         label='Estoque'

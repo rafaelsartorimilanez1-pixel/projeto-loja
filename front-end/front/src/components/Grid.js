@@ -1,5 +1,8 @@
 import React from 'react';
+import axios from 'axios';
 import styled from 'styled-components';
+import {FaTrash, FaEdit} from "react-icons/fa";
+import { toast } from 'react-toastify';
 
 const Thead = styled.thead``
 const Tbody = styled.tbody``
@@ -22,9 +25,23 @@ const Th = styled.th`
     border-bottom: inset;
     padding-bottom:5px; 
 `
-const Td = styled.td``
+const Td = styled.td`
+    padding-top: 15px;
+`
 
-const Grid = () => {
+const Grid = ({ products, setProducts, setOnEdit }) => {
+
+    const handlerDelete = async (id) => {
+        await axios.delete('http://localhost:4000/' + id)
+        .then( ({data}) => {
+            const newArray = products.filter( (product) => product.id !== id )
+
+            setProducts(newArray)
+            toast.success(data)
+        } )
+        .catch((err) => toast.error(err.response?.data || "Erro"))
+    }
+
     return (
         <Table>
             <Thead>
@@ -36,17 +53,22 @@ const Grid = () => {
             </Thead>
 
             <Tbody>
-                <Tr>
-                    <Td></Td>                    
-                </Tr>
+                { products.map((item, index) => (
+                    <Tr key={index}>
+                        <Td width="30%"> {item.nome}</Td>
+                        <Td width="30%"> {item.preco}</Td>
+                        <Td width="20%"> {item.estoque}</Td>
 
-                <Tr>
-                    <Td></Td>
-                </Tr>
+                        <Td>
+                        <FaEdit onClick={() => setOnEdit(item)} />
+                        </Td>
 
-                <Tr>
-                    <Td></Td>
-                </Tr>
+                        <Td>
+                        <FaTrash onClick={ (e) => handlerDelete(item.idprodutos) }/>
+                        </Td>
+                    </Tr>
+                ))}
+
             </Tbody>
         </Table>
     );
